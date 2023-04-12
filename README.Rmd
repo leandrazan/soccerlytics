@@ -1,34 +1,46 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
 
 # soccerlytics
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of soccerlytics is to …
+The goal of soccerlytics is to ...
 
 ## Installation
 
-You can install the development version of soccerlytics from
-[GitHub](https://github.com/) with:
+You can install the development version of soccerlytics from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("leandrazan/soccerlytics")
 ```
 
-``` r
+```{r}
 #library(soccerlytics)
 ```
 
+
 ### Load data
 
-The visualistions will be carried out based on the publicly availabe
-event data set from the 2012/2013 Champion’s League Final. The data is
-made available by StatsBomb.
+The visualistions will be carried out based on the publicly availabe event data set 
+from the 2012/2013 Champion's League Final. 
+The data is made available by StatsBomb.
 
-``` r
+```{r}
 # # load Data
 # FreeComp <- StatsBombR::FreeCompetitions()
 # FreeMatch <-  StatsBombR::FreeMatches(FreeComp %>% filter(season_name == "2012/2013"))
@@ -43,17 +55,17 @@ made available by StatsBomb.
 # ## clean eventData (unnest several columns)
 # eventData <- StatsBombR::allclean(eventData)
 # eventData
+
 ```
 
 ### Tactical line up
 
-To plot the tactical line up, we first extract the lineup dataframes
-within the event dataset and use the preparation function
-`prep_formation_data` which can then be passed to the `plot_formation`
-function, along with the additional information of which player was
-substituted, here provided in the dataframe `subPlayers`.
+To plot the tactical line up, we first extract the lineup dataframes within the 
+event dataset and use the preparation function `prep_formation_data` which can then 
+be passed to the `plot_formation` function, along with the additional information 
+of which player was substituted, here provided in the dataframe `subPlayers`.
+```{r, fig.dim=c(12,8)}
 
-``` r
 # dfForm <- prep_formation_data(eventData$tactics.lineup[[1]], team.name = "BVB") %>% 
 #   bind_rows(prep_formation_data(eventData$tactics.lineup[[2]], team.name = "Bayern Munich"))
 # subPlayers <- eventData %>% filter(type.name == "Substitution") %>% 
