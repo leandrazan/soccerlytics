@@ -42,9 +42,11 @@ FreeMatch <- FreeMatch \%>\% filter(match_id == 18240)
 eventData <- StatsBombR::get.matchFree(FreeMatch)
 eventData <- StatsBombR::allclean(eventData)
 
-match_dynamics(eventData, binsize = 5, type  = "Possession", outcome_names = NA)
-match_dynamics(eventData, binsize = 5, type  = "Pass", outcome_names = NA)
-match_dynamics(eventData, binsize = 5, type  = "Pressure", outcome_names = NA)
-match_dynamics(eventData, binsize = 5, type  = "xg", outcome_names = NA)
+match_dynamics(eventData, binsize = 5, type  = "Possession")
+match_dynamics(eventData, binsize = 5, type  = "Pass")
+# pass accurracy averaged over 10 min intervals, only shots that were goals
+match_dynamics(eventData, binsize = 10, type  = "Pass", outcome_names = list(pass = NA, shot = "Goal"))
+match_dynamics(eventData, binsize = 10, type  = "Pressure")
+match_dynamics(eventData, binsize = 5, type  = "xg")
 
 }
