@@ -8,8 +8,12 @@ match_dynamics(
   df,
   binsize,
   type,
+  hometeam = NULL,
   outcome_names = list(pass = NA, shot = c("Saved", "Goal", "Blocked", "Off T")),
-  ylim = c(0, 100)
+  ylim = c(0, 100),
+  colourHome = "blue",
+  colourAway = "red",
+  theme = "bw"
 )
 }
 \arguments{
@@ -20,12 +24,17 @@ match_dynamics(
 \item{type}{Name of the variable for which to compute the dynamics. Must be one of
 \code{Possession}, \code{Pass}, \code{Pressure}, \code{xg}.}
 
+\item{hometeam}{Name of the home team, can be \code{NULL} if no specific team colours are chosen.}
+
 \item{outcome_names}{A list containing outcome names for different variables which are then
 considered in the statistics, e.g. \code{outcome_names = list(pass = NA, shot = "Saved", "Goal")} only plots
 vertical lines for shots that were either saved or a goal, and only considers passes that were complete
 (which is NA in event data)}
 
 \item{ylim}{Adjusts the limits of y-axis}
+
+\item{theme}{The ggplot theme: choose between \code{bw}, \code{dark}, \code{gray} for black and white,
+dark and gray themes, respectively.}
 }
 \value{
 a ggplot object
@@ -34,15 +43,11 @@ a ggplot object
 Plot match dynamics (variable over time)
 }
 \examples{
-
-FreeComp <- StatsBombR::FreeCompetitions()
-FreeMatch <-  StatsBombR::FreeMatches(FreeComp \%>\% filter(season_name == "2012/2013"))
-# filter match with id 18240
-FreeMatch <- FreeMatch \%>\% filter(match_id == 18240)
-eventData <- StatsBombR::get.matchFree(FreeMatch)
-eventData <- StatsBombR::allclean(eventData)
-
-match_dynamics(eventData, binsize = 5, type  = "Possession")
+data(eventData)
+# with official club colours
+match_dynamics(eventData, binsize = 5, type  = "Possession", hometeam = "Borussia Dortmund",
+colourHome = "#FDE100", colourAway = "#DC052D", theme = "dark")
+# with default settings
 match_dynamics(eventData, binsize = 5, type  = "Pass")
 # pass accurracy averaged over 10 min intervals, only shots that were goals
 match_dynamics(eventData, binsize = 10, type  = "Pass", outcome_names = list(pass = NA, shot = "Goal"))

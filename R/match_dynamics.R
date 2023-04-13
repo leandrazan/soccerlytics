@@ -5,39 +5,50 @@
 #' @param binsize The bin size (in minutes) within which to compute the variable of interest
 #' @param type Name of the variable for which to compute the dynamics. Must be one of
 #' `Possession`, `Pass`, `Pressure`, `xg`.
+#' @param hometeam Name of the home team, can be `NULL` if no specific team colours are chosen.
 #' @param outcome_names A list containing outcome names for different variables which are then
 #'  considered in the statistics, e.g. `outcome_names = list(pass = NA, shot = "Saved", "Goal")` only plots
 #'  vertical lines for shots that were either saved or a goal, and only considers passes that were complete
 #'  (which is NA in event data)
 #' @param ylim Adjusts the limits of y-axis
+#' @param theme The ggplot theme: choose between `bw`, `dark`, `gray` for black and white,
+#' dark and gray themes, respectively.
 #'
 #' @return a ggplot object
 #' @export
 #'
 #' @examples
-#'
-#' FreeComp <- StatsBombR::FreeCompetitions()
-#' FreeMatch <-  StatsBombR::FreeMatches(FreeComp %>% filter(season_name == "2012/2013"))
-#' # filter match with id 18240
-#' FreeMatch <- FreeMatch %>% filter(match_id == 18240)
-#' eventData <- StatsBombR::get.matchFree(FreeMatch)
-#' eventData <- StatsBombR::allclean(eventData)
-#'
-#' match_dynamics(eventData, binsize = 5, type  = "Possession")
+#' data(eventData)
+#' # with official club colours
+#' match_dynamics(eventData, binsize = 5, type  = "Possession", hometeam = "Borussia Dortmund",
+#' colourHome = "#FDE100", colourAway = "#DC052D", theme = "dark")
+#'# with default settings
 #' match_dynamics(eventData, binsize = 5, type  = "Pass")
 #' # pass accurracy averaged over 10 min intervals, only shots that were goals
 #' match_dynamics(eventData, binsize = 10, type  = "Pass", outcome_names = list(pass = NA, shot = "Goal"))
 #' match_dynamics(eventData, binsize = 10, type  = "Pressure")
 #' match_dynamics(eventData, binsize = 5, type  = "xg")
 #'
-match_dynamics <- function(df, binsize, type, outcome_names = list(pass = NA, shot = c("Saved", "Goal", "Blocked", "Off T")),
-                           ylim = c(0, 100)) {
+match_dynamics <- function(df, binsize, type, hometeam = NULL, outcome_names = list(pass = NA, shot = c("Saved", "Goal", "Blocked", "Off T")),
+                           ylim = c(0, 100), colourHome = "blue", colourAway = "red", theme = "bw") {
 
+  theme_tmp <- switch(theme, "bw" = theme_bw,
+                             "dark" = theme_dark,
+                             "gray" = theme_gray)
+
+  teams <- unique(df$team.name)
+  if(is.null(hometeam)) {hometeam <- teams[1]}
+  awayteam <- teams[!(teams == hometeam)]
+
+  df$team.name <- factor(df$team.name, levels = c(hometeam, awayteam))
+  df$possession_team.name <-  factor(df$possession_team.name, levels = c(hometeam, awayteam))
+  # length of match
   end_time <- df[nrow(df), c("minute", "second")]
   end_time <- end_time$minute*60 + end_time$second
 
   bins_end <- ceiling(end_time/(binsize*60))*binsize*60
 
+  # select relevant variables
   df  <- df %>% select(minute, second, period, team.name, type.name, pass.outcome.name,
                        dribble.outcome.name, shot.statsbomb_xg, shot.outcome.name,
                        possession, possession_team.name, duration
@@ -45,7 +56,7 @@ match_dynamics <- function(df, binsize, type, outcome_names = list(pass = NA, sh
     mutate(seconds = minute*60 + second)
 
 
-
+  # compute bin borders and labels
   xx <- seq(0, bins_end, binsize*60)
   labels <- seq(0, (bins_end -1)/60, binsize)
   breaks <-  seq(0, (bins_end -1)/60, binsize)
@@ -84,10 +95,11 @@ match_dynamics <- function(df, binsize, type, outcome_names = list(pass = NA, sh
     plot_out <- dfperc %>% ggplot(aes( x = as.numeric(as.character(bins)), y = percentage*100, colour = team.name)) +
       geom_line(size = 1)+
       #geom_text(aes( x = as.numeric(bins), y= perc, label = round(perc)), vjust = -1, size = 4, show.legend = F)+
-      scale_color_manual(values = c("red", "blue"))+
+      scale_color_manual(values = c(colourHome, colourAway))+
       scale_x_continuous(breaks = breaks, labels = labels)+
       coord_cartesian(ylim = ylim)+
-      theme_bw() + theme(legend.position = "bottom", text = element_text(size = 20))+
+      theme_tmp() +
+      theme(legend.position = "bottom", text = element_text(size = 20))+
       scale_linetype_manual(values = c("dashed", "solid"))+
       geom_vline(data  = dfperc %>% filter(type.name == "Shot"),
                  aes( xintercept  = minute, colour = team.name, linetype ="Shot"))+
@@ -114,10 +126,11 @@ match_dynamics <- function(df, binsize, type, outcome_names = list(pass = NA, sh
     plot_out <- dfperc %>%
       ggplot(aes(x= as.numeric(as.character(bins)), y = poss_perc*100, colour = team.name))+
       geom_line(size = 1)+
-      scale_color_manual(values = c("red", "blue"))+
+      scale_color_manual(values = c(colourHome, colourAway))+
       scale_x_continuous(breaks = breaks, labels = labels)+
       labs( x= "Time", y = "", colour = "Team:", title = "Possession (%)")+
-      theme_bw() + theme(legend.position = "bottom", text = element_text(size = 20))+
+      theme_tmp()+
+      theme(legend.position = "bottom", text = element_text(size = 20))+
       scale_linetype_manual(values = c("dashed", "solid"))+
       geom_vline(data  = dfperc %>% filter(type.name == "Shot"),
                  aes( xintercept  = minute, colour = team.name, linetype ="Shot"))+
@@ -152,17 +165,18 @@ match_dynamics <- function(df, binsize, type, outcome_names = list(pass = NA, sh
     dfpress <- Shots %>% full_join(pressure_perOppPoss, by = c("team.name", "bins"))
 
     plot_out <- dfpress %>%
-        ggplot(aes( x = as.numeric(as.character(bins)), y = pressPerOpp, colour = team.name)) +
-        geom_vline(data = dfpress %>% filter(type.name == "Shot"), aes( xintercept  = minute, colour = team.name, linetype ="Shot"))+
-        scale_linetype_manual(values = c("dashed", "solid"))+
-        geom_line(size = 1)+
-        geom_point(data = dfpress %>% filter(shot.outcome.name == "Goal"), aes(x = minute, y = .005, colour = team.name),
-                   size = 6, show.legend = F)+
-        scale_color_manual(values = c("red", "blue"))+
-        scale_x_continuous(breaks = breaks, labels = labels)+
-        labs( x = "Time", y = "", colour = "Team:",
-              title = "Possession Adjusted pressure over time", subtitle = "cumulated pressure duration/opponent possession", linetype = " ")+
-      theme_bw() + theme(legend.position = "bottom", text = element_text(size = 20))
+      ggplot(aes( x = as.numeric(as.character(bins)), y = pressPerOpp, colour = team.name)) +
+      geom_vline(data = dfpress %>% filter(type.name == "Shot"), aes( xintercept  = minute, colour = team.name, linetype ="Shot"))+
+      scale_linetype_manual(values = c("dashed", "solid"))+
+      geom_line(size = 1)+
+      geom_point(data = dfpress %>% filter(shot.outcome.name == "Goal"), aes(x = minute, y = .005, colour = team.name),
+                 size = 6, show.legend = F)+
+      scale_color_manual(values = c(colourHome, colourAway))+
+      scale_x_continuous(breaks = breaks, labels = labels)+
+      labs( x = "Time", y = "", colour = "Team:",
+            title = "Possession Adjusted pressure over time", subtitle = "cumulated pressure duration/opponent possession", linetype = " ")+
+      theme_tmp() +
+      theme(legend.position = "bottom", text = element_text(size = 20))
 
 
   }
@@ -185,9 +199,10 @@ match_dynamics <- function(df, binsize, type, outcome_names = list(pass = NA, sh
       geom_point(data = dfxg %>% filter(isGoal == TRUE), aes( x = seconds, y = xG, colour = team.name), shape = 19, size = 4)+
       geom_text(data = dfxg %>% filter(isGoal == TRUE), aes(x = seconds, y = xG ), label = "Goal", size = 4,  vjust = -1.1, hjust = 0,
                 show.legend = FALSE)+
-      scale_colour_manual(values = c("red", "blue"))+
+      scale_colour_manual(values = c(colourHome, colourAway))+
       labs( x= "Time", y = "cumulated xG", colour = "Team:", title =  "xG Dynamics")+
-      theme_bw() + theme(legend.position = "bottom", text = element_text(size = 20))
+      theme_tmp() +
+      theme(legend.position = "bottom", text = element_text(size = 20))
 
   }
 

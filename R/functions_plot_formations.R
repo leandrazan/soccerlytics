@@ -64,15 +64,7 @@ prep_formation_data <- function(df, team.name, player_var_name = "player.name",
 #' @export
 #'
 #' @examples
-#' # load Data
-#' FreeComp <- StatsBombR::FreeCompetitions()
-#' FreeMatch <-  StatsBombR::FreeMatches(FreeComp %>% filter(season_name == "2012/2013"))
-#'
-#'# filter match with id 18240 (CL final)
-#' FreeMatch <- FreeMatch %>% filter(match_id == 18240)
-#' eventData <- StatsBombR::get.matchFree(FreeMatch)
-#' ## clean eventData (unnest several columns)
-#' eventData <- StatsBombR::allclean(eventData)
+#' data(eventData)
 #'
 #' dfForm <- prep_formation_data(eventData$tactics.lineup[[1]], team.name = "BVB") %>%
 #'   bind_rows(prep_formation_data(eventData$tactics.lineup[[2]], team.name = "Bayern Munich"))
