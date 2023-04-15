@@ -1,30 +1,83 @@
-# #### Pass Heatmaps
-# events <-  read_csv("Barnsley_Portsmouth_3845285.csv", guess_max = 4000)
-#
-#
-# # add a column with categorial variable for 15-minute time periods
-# # also get rid off some columns to have unique observations of the variables
-# # that are considered in the following
-#
-# df  <- events %>% select(!starts_with("freeze")) %>% unique()
-#
-# allPasses <- df %>% filter(event_type_name == "Pass") %>%
-#   select(team_name, player_name, minute, second, location_x, location_y,
-#          end_location_x, end_location_y, pass_angle, type_name, event_type_name, outcome_name,
-#          bins)
-#
-# allPasses %>% filter(team_name == hometeam) %>%
-#   mutate(failed = ifelse(outcome_name %in% c("Out", "Incomplete", "Pass Offside", "Unknown"), 1, 0)) %>%
-#   ggplot()+
-#   scale_y_reverse()+
-#   geom_bin_2d(aes( x = location_x, y = location_y), binwidth = c(15, 10), colour = "gray")+
-#   fc_annotate_pitch(dimensions = c(120, 80), fill = NA, palette = "bw")+
-#   viridis::scale_fill_viridis(option = "F", direction = -1, begin = 0.4)+
-#   facet_wrap( ~ failed, labeller = as_labeller(c("0" = "Successful", "1" = "Failed")))+
-#   labs(fill = "Number of Passes:", title = "Barnsley", subtitle = "Pass Heatmap")
-#
-# ggsave(paste0(getwd(), "/Plots/PassHeatMap.pdf"), device = "pdf", height = 8, width = 18)
-#
+#### Pass Heatmaps
+
+
+
+
+#' Passing heatmap
+#'
+#' @param df Event data set
+#' @param team Name of the team for which to make a passing heatmap
+#' @param LeftToRight Logical; whether you want the team to play from left to right
+#'  in the visualisation
+#' @param pitch_dim Dimension of the pitch
+#' @param xBins Number of bins in x direction
+#' @param yBins Number of bins in y direction
+#'
+#' @return A ggplot object: pass heatmap for successful and failed passes along with
+#' average passing direction
+#' @export
+#'
+#' @examples
+#' data(eventData)
+#' pass_heatmap(eventData, team = "Borussia Dortmund")
+#' pass_heatmap(eventData, team = "Bayern Munich", LeftToRight = FALSE, xBins = 6, yBins =4)
+pass_heatmap <- function(df, team, LeftToRight = TRUE, pitch_dim = c(120, 80), xBins = 8, yBins = 5) {
+
+  reverse_scale <- ifelse(LeftToRight, scale_y_reverse, scale_x_reverse)
+
+  x.range <- seq(0, pitch_dim[1], length.out = xBins+1)
+  y.range <- seq(0, pitch_dim[2], length.out = yBins+1)
+
+  allPasses <- df %>%
+    filter(type.name == "Pass", team.name == team) %>%
+    unique() %>%
+    select(team.name, player.name, minute, second, location.x, location.y,
+           pass.end_location.x, pass.end_location.y, pass.angle, type.name,  pass.outcome.name)
+
+  allPasses$pass.outcome.name[is.na(allPasses$pass.outcome.name)] <- "Successful"
+
+  allPasses <- correct_locations(allPasses, pitch_dim = pitch_dim)
+
+  allPasses$xbin <- cut(allPasses$location.x, breaks = x.range)
+  allPasses$ybin <- cut(allPasses$location.y, breaks = y.range)
+  PassBins_x <- tibble(xbin = unique(levels(allPasses$xbin)),
+                     x_center = RcppRoll::roll_mean(x.range, 2))
+
+  PassBins_y <- tibble(ybin = unique(levels(allPasses$ybin)),
+                     y_center = RcppRoll::roll_mean(y.range, 2))
+
+  PassBins <- expand_grid(PassBins_x, PassBins_y)
+
+  allPasses <- allPasses %>% filter(!(pass.outcome.name == "Injury Clearance")) %>%
+    mutate(failed = ifelse(pass.outcome.name %in% c("Out", "Incomplete", "Pass Offside", "Unknown"), 1, 0))
+
+  allPasses <- allPasses %>% left_join(PassBins, by = c("xbin", "ybin"))
+  PassEnd <- allPasses %>% group_by(failed, xbin, ybin, x_center, y_center) %>%
+    summarise_at(vars(pass.end_location.x, pass.end_location.y),  ~ mean(.x, na.rm = TRUE)) %>%
+    ungroup()
+
+
+  allPasses %>%
+    ggplot()+
+    reverse_scale() +
+    geom_bin_2d(aes( x = location.x, y = location.y),
+                binwidth = c(diff(x.range)[1], diff(y.range)[1]), colour = "gray")+
+    draw_pitch(dimensions = c(120, 80), fill = NA, palette = "bw")+
+    viridis::scale_fill_viridis(option = "F", direction = -1, begin = 0.4)+
+    geom_segment(data = PassEnd,aes(x = x_center, y = y_center,
+                                    xend = x_center + (pass.end_location.x - x_center)/3,
+                                    yend =  y_center + (pass.end_location.y - y_center)/3),
+                 arrow = arrow(length = unit(0.1, "cm")), lineend = "round", linejoin = "bevel", size = 1, colour = "gray20")+
+    facet_wrap( ~ failed, labeller = as_labeller(c("0" = "Successful", "1" = "Failed")))+
+    labs(fill = "Number of Passes:", title = team, subtitle = "Pass Heatmap")+
+    theme_bw()+
+    theme(legend.position = "bottom", text = element_text(size = 20), axis.text = element_blank(),
+          axis.title = element_blank())
+
+  }
+
+
+
 # allPasses$location_x[allPasses$location_x == 120] <- 119.999
 # allPasses %>% filter(team_name == awayteam) %>%
 #   mutate(failed = ifelse(outcome_name %in% c("Out", "Incomplete", "Pass Offside"), 1, 0)) %>%
@@ -158,7 +211,10 @@
 #          location_x, location_y, outcome_name, duration)
 #
 # poss_nest <- poss_nest %>% group_by(possession, possession_team_name) %>% nest()
-#
+# #
+
+
+
 # lostposs_port <- df %>%
 #   ggplot(aes( x = as.numeric(as.character(grp.x)), y =as.numeric(as.character(grp.y)), fill = avg*100 )) +
 #   geom_tile()+

@@ -186,3 +186,42 @@ plot_dangerpass_heatmap(df_dp, shot_window = 20, fill_limits = c(1, 15),
 ```
 
 <img src="man/figures/README-unnamed-chunk-12-1.png" width="60%" style="display: block; margin: auto;" />
+
+## Pass heatmap
+
+With `pass_heatmap` you can create a passing heatmap, where for your
+chosen number of bins the total number of passes beginning in a given
+bin is calculated, seperately for successful and failed passes. Further,
+the average direction of passes is visualised with arrows, where the
+arrow length is proportional to the pass length.
+
+``` r
+pass_heatmap(eventData, team = "Borussia Dortmund")
+```
+
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+
+``` r
+pass_heatmap(eventData, team = "Bayern Munich", LeftToRight = FALSE, xBins = 6, yBins =4)
+```
+
+<img src="man/figures/README-unnamed-chunk-13-2.png" width="100%" />
+
+## Possession loss heatmap
+
+`poss_loss_heatmap` generates a heatmap showing the distribution of
+possession losses on the pitch. The number of possession losses per bin
+is counted and normalised by the total number of possession losses.
+Again, you can choose how many bins in x and y direction are used.
+
+``` r
+poss_loss_heatmap(eventData, "Borussia Dortmund", xBins = 6, yBins = 4)
+```
+
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="60%" style="display: block; margin: auto;" />
+
+``` r
+poss_loss_heatmap(eventData, "Bayern Munich", LeftToRight = FALSE, xBins = 6, yBins = 4)
+```
+
+<img src="man/figures/README-unnamed-chunk-14-2.png" width="60%" style="display: block; margin: auto;" />
