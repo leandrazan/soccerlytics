@@ -1,0 +1,96 @@
+---
+title: "Basic Markov Chain model"
+author: "LZ"
+date: "16 4 2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Basic idea of Markov Chain model
+
+The model assumes that the actions are memoryless, i.e., for a given state of 
+the model any action that has happened before has no influence on what will happen
+next. 
+For example, when working with the states `(Ball in) Midfield`, `(Ball in) Box`, `(Ball on) Wing`, 
+`Goal`, `Ball lost`, the probabilities of moving from one state to another could 
+be described by the following *transition* matrix
+
+```{r cars}
+D <- matrix(c(0.25, 0.2, 0.1, 0.05, 0.4, 0.1, 0.25, 0.2, 0.15, 0.3, 0.1, 0.1, 0.25,
+              0.05, 0.5, 0,0,0,1,0,0,0,0,0,1), byrow = TRUE, ncol = 5)
+rownames(D) <- colnames(D) <- c("M", "B", "W", "G", "L")
+D
+```
+
+The states `Goal` and `Ball Lost` are absorbing states.
+When we want to find out the *expected threat* of having the ball within a certain state, 
+this translates to finding the solution of the equation explained below. 
+Let $\mathbf{x}_T = (x_M, x_B, x_W)^\top$ denote the vector of expected threat with entries for 
+expected threat in Midfield, in Box and on Wing, respectively. 
+When the ball is in midfield, the threat of having the ball at that position is the 
+probability of scoring, plus the probability of passing/carrying the ball within the midfield
+area times the threat of having the ball in the midfield are, plus the probability of 
+passing/carrying the ball to the box times
+the threat of having the ball in the box, plus the probability of passing/carrying the
+ball to the wing times the threat of having the ball at the wing. Similar for having the 
+ball at the wing or in the box. Mathematically, this can be expressed in the 
+following equations:
+
+\[ \begin{aligned}
+x_M &= 0.05 + 0.25x_M 0.2x_B + 0.1x_W \\
+   x_B &= 0.15 + 0.1x_M + 0.25 x_B + 0.2x_W\\
+   x_W &= 0.05 + 0.1x_M + 0.1x_B + 0.25x_W.
+   \end{aligned}
+\]
+
+In matrix notation, this can be written as
+
+\[ \begin{aligned}
+    \mathbf{x}_T  &= A\mathbf{x}_T  + g \\
+    \Leftrightarrow \ (I - A)\mathbf{x}_T  &= g,
+    \end{aligned}
+\]
+
+where 
+
+```{r}
+A <- D[1:3, 1:3]
+A  
+```
+and 
+$g = (0.05, 0.15, 0.05)^\top$.
+This equation needs to be solved for $\mathbf{x}_T $.
+
+```{r, echo=FALSE}
+g <- c(0.05, 0.15, 0.05)
+```
+
+```{r}
+solve(diag(1,3) - A, g)
+```
+
+### Solving iteratively
+
+Instead of using linear algebra, one can solve the equation iteratively until convergence.
+
+To do so, we initialise $\mathbf{x}_T^{(0)} = (0, 0, 0)^\top$ and run the equation 
+iteratively, i.e. 
+
+```{r}
+xT <- c(0, 0, 0)
+eps <- 1e-10
+for(i in 1:100) {
+  xT_old <- xT
+  xT  <- A %*% xT + g
+  if(sum((xT - xT_old)^2) < eps) { 
+    break()
+  }
+}
+i
+colnames(xT) <- "xT"
+t(xT)
+```
