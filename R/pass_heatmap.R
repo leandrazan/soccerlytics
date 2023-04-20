@@ -62,7 +62,7 @@ pass_heatmap <- function(df, team, LeftToRight = TRUE, pitch_dim = c(120, 80), x
     reverse_scale() +
     geom_bin_2d(aes( x = location.x, y = location.y),
                 binwidth = c(diff(x.range)[1], diff(y.range)[1]), colour = "gray")+
-    draw_pitch(dimensions = c(120, 80), fill = NA, palette = "bw")+
+    draw_pitch(dimensions = c(120, 80), fill = NA, palette = "bw", reverse_scale = reverse_scale)+
     viridis::scale_fill_viridis(option = "F", direction = -1, begin = 0.4)+
     geom_segment(data = PassEnd,aes(x = x_center, y = y_center,
                                     xend = x_center + (pass.end_location.x - x_center)/3,

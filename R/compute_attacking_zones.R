@@ -126,9 +126,9 @@ plot_attack_zones <- function(dfAttack, team, pitchLength = 120, pitchWidth = 80
   n_attacks <- sum(dfAttack$n, na.rm = TRUE)
 
   if(leftToRight) {
-    scale_reverse <- scale_y_reverse
+    reverse_scale <- scale_y_reverse
   } else {
-    scale_reverse <- scale_x_reverse
+    reverse_scale <- scale_x_reverse
   }
 
   step_size <- diff(seq(0, pitchWidth, pitchWidth/4))[1]
@@ -143,8 +143,8 @@ plot_attack_zones <- function(dfAttack, team, pitchLength = 120, pitchWidth = 80
 
   attackplot <- dfAttack %>% left_join(arrow_coords, by = "zone") %>%
     ggplot()+
-    draw_pitch(dimensions = c(pitchLength, pitchWidth), palette = "bw") +
-    scale_reverse()+
+    draw_pitch(dimensions = c(pitchLength, pitchWidth), palette = "bw", reverse_scale = reverse_scale) +
+    reverse_scale()+
     geom_segment(aes(x = arrow_x_start, y = arrow_y_start, xend = arrow_x_end, yend = arrow_y_end,
                      colour = percentage*100),
                  arrow = arrow(),

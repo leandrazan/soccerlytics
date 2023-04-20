@@ -97,7 +97,7 @@ plot_dangerpass_heatmap <- function(dfDangerPass, leftToRight = TRUE, shot_windo
 
   pointplot <- dfDangerPass %>%
     ggplot(aes(x = location.x , y= location.y))+
-    draw_pitch(dimensions = pitch_dim)+
+    draw_pitch(dimensions = pitch_dim, reverse_scale = reverse_scale)+
     reverse_scale()+
     geom_point(size = 1)+
     labs(title = paste("Passes made", shot_window, "s before a shot"), subtitle = team)+
@@ -111,7 +111,7 @@ plot_dangerpass_heatmap <- function(dfDangerPass, leftToRight = TRUE, shot_windo
     ggplot(aes(x = location.x , y= location.y))+
     geom_bin_2d(binwidth = c(diff(x.range)[1], diff(y.range)[1]))+
     reverse_scale()+
-    draw_pitch(dimensions = pitch_dim, fill = NA, palette = "bw")+
+    draw_pitch(dimensions = pitch_dim, fill = NA, palette = "bw", reverse_scale = reverse_scale)+
     scale_fill_gradient(low = "white", high = "red", limits = add.args$fill_limits)+
     labs(title = paste("Danger Pass Heatmap for", team), fill = "Number of passes:",
          subtitle =  paste("Passes made", shot_window, "s before a shot"))+

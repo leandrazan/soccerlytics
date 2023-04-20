@@ -37,7 +37,13 @@ correct_locations <- function(df, pitch_dim = c(120, 80), name_x = "location.x",
   df[ , name_x] <- df$location.x
   df[, name_y] <- df$location.y
 
-  df %>% select(-c(location.x, location.y))
+  if(!(name_x == "location.x")) {
+  df <- df %>% select(-location.x)
+  }
+  if(!(name_y == "location.y")) {
+    df <- df %>% select(-location.y)
+  }
+  df
 }
 
 

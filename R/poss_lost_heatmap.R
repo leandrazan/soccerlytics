@@ -95,7 +95,7 @@ poss_loss_heatmap <- function(df, team, xBins = 8, yBins = 5, pitch_dim = c(120,
     ggplot(aes( x = as.numeric(as.character(grp.x)), y =as.numeric(as.character(grp.y)), fill = avg*100 )) +
     geom_tile(colour = "gray")+
     reverse_scale()+
-    draw_pitch(dimension = c(120, 80), fill = NA, palette = "bw") +
+    draw_pitch(dimension = c(120, 80), fill = NA, palette = "bw", reverse_scale = reverse_scale) +
     viridis::scale_fill_viridis(option = "F", direction = -1, begin = 0.4)+
     labs(title = "Distribution of possession losses", subtitle = team, fill = "Lost Possession (in %):")+
     theme_bw()+
