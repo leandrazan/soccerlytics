@@ -5,18 +5,15 @@
 \alias{eventData}
 \title{Example Event Data set}
 \format{
-\subsection{\code{eventData}}{
-
-A data frame with 3,338 rows and 156 columns.
+A tibble with 3,338 rows and 156 columns.
 The original event data was loaded with the \code{StatsBombR} package,
 and the \code{allclean} function has been called.
-}
 }
 \source{
 \url{https://github.com/statsbomb/open-data}
 }
 \usage{
-eventData
+data(eventData)
 }
 \description{
 Event Data from CL final 2012/2013, publicly available from StatsBomb

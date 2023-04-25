@@ -225,3 +225,30 @@ poss_loss_heatmap(eventData, "Bayern Munich", LeftToRight = FALSE, xBins = 6, yB
 ```
 
 <img src="man/figures/README-unnamed-chunk-14-2.png" width="60%" style="display: block; margin: auto;" />
+
+## (position-based) xT Model
+
+The position-based expected threat model developed by Karun Singh (see
+<https://karun.in/blog/expected-threat.html> for the original post) is
+implemented in the function `compute_xT`. Currently it only works with
+data in SPADL format. For more information on the model and how to use
+the function, see the respective vignette.
+
+``` r
+data(spadlData)
+prep_dat <- prepare_data(spadlData, bins_x = 16, bins_y = 12)
+xT <- compute_xT(prep_dat$prep_data, itermax = 5)
+#> [1] 5
+#>   max_diff 
+#> 0.02017816
+xT_tib <- prep_dat$bin_centers %>% left_join(xT$xT_final)
+xT_tib %>% ggplot(aes( x = x_center, y = y_center, fill = xT)) +
+  geom_tile(width = 105/16, height = 68/12, colour = "gray")+
+  scale_fill_gradient(low = "white", high = "darkred")+
+  draw_pitch(dimensions = c(105, 68), fill = NA)+
+  geom_text(aes(label = round(xT, 2)))+ 
+  theme(text = element_text(size = 20), axis.title = element_blank())+ 
+  ggtitle("xT after 5 iterations")
+```
+
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="60%" style="display: block; margin: auto;" />

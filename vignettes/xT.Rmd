@@ -1,12 +1,17 @@
 ---
-title: "xT model (position-based)"
-author: ""
-date: ""
-output: html_document
+title: "xT"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{xT}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
 ## Position-based expected threat (xT) model
@@ -49,7 +54,7 @@ direction and 12 cells in `y` direction.
 The function `prepare_data` assigns cells to start and end point of each action 
 and further returns the cell centers, which is useful for plotting heatmaps.
 
-```{r, fig.dim=c(12.5, 8),  out.width="75%", fig.align='center'}
+```{r, fig.dim=c(12.5, 8),  out.width="85%", fig.align='center'}
 prep_dat <- prepare_data(spadlData)
 # visualise grid:
 prep_dat$bin_centers %>%
@@ -69,7 +74,7 @@ df_prob
 ```
 Let's visualise these probabilities:
 
-```{r, fig.dim=c(22, 8),   fig.align='center'}
+```{r, fig.dim=c(14, 5), out.width="99%",  fig.align='center'}
 prep_dat$bin_centers %>% left_join(df_prob, by = c("bin_start_x", "bin_start_y")) %>% 
   pivot_longer(cols = c(move_prob, shot_prob, goal_prob), names_to = "type", values_to = "prob_value") %>% 
   ggplot(aes( x = x_center, y = y_center, fill = prob_value))+ 
@@ -107,7 +112,7 @@ prep_dat$bin_centers %>%
   geom_text(aes(label = round(trans_prob, 2)))+
   draw_pitch(dimensions = c(105, 68), fill = NA)+
   labs(fill = "transition probability:")+
-  theme(legend.position = "bottom", axis.title = element_blank(), text = element_text(size = 20))
+  theme(legend.position = "bottom", axis.title = element_blank(), text = element_text(size = 20), legend.key.width = unit(1, "cm"))
 
 ```
 Now we compute the expected threat with the function `compute_xT` with 5 iterations.

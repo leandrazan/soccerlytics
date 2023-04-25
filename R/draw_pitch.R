@@ -1,4 +1,22 @@
 ## copied from scoutr
+#' annotate a pitch to a ggplot object
+#'
+#' copied from package scoutr
+#'
+#' @param dimensions pitch dimensions
+#' @param palette colour palette, one of "gw", "bw", "classic", "smurf", "dark",
+#' "wc"
+#' @param color line colour
+#' @param fill fill colour
+#' @param coord_flip whether to flip coordinates
+#' @param reverse_scale whether in the ggplot object to which the pitch is annotated
+#' any scale was reversed. NULL if this is not the case, anything else if it is the case
+#'
+#' @return a list with ggplot commands
+#' @export
+#'
+#' @examples
+#' ggplot() + draw_pitch()
 draw_pitch <- function (dimensions = c(120, 80), palette = "gw", color = NULL,
           fill = NULL, coord_flip = FALSE, reverse_scale = NULL) {
 
